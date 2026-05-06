@@ -32,6 +32,9 @@ A TradingView Pine Script v5 indicator that plots the all-time high and a config
 
 **Read the write-up:** [Cash Indices and Higher Time Frame Pullbacks](https://zentradingtech.com/2025/12/19/cash-indices-and-higher-time-frame-pullbacks/)
 
+### [Zen Bar Range Projections](./Zen-Bar-Range-Projections)
+
+A TradingView Pine Script v6 indicator that projects 0.5x and 1x ABR levels above and below the close of the prior bar - either on the chart timeframe or on a higher timeframe. Useful for seeing where a measured move from the last completed bar lands relative to current price. Higher-TF mode pulls values from the last completed HTF bar so the lines don't drift while the live HTF bar is forming. Bars-back input fans out up to 12 historical projection sets for visual auditing.
 ### [Zen Trader Pro RR — R/R Ruler (NinjaTrader 8)](./Zen-Trader-Pro-RR-NT)
 
 A NinjaTrader 8 risk/reward ruler with three click modes: middle-click measures R-multiples from the close (Buy/Sell the Close), Shift+middle-click measures R-multiples from a breakout entry beyond the bar's High or Low (Buy Stop / Sell Stop), and Ctrl+middle-click projects fixed tick distances for quick measured move checks. Direction is automatic — reads bar colour. All three modes can coexist on the same bar simultaneously.

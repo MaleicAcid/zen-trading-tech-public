@@ -1,0 +1,76 @@
+//@version=6
+indicator('Zen Bar Range Projections v1.5', shorttitle='ZBR Proj v1.5', overlay=true)
+// ============================================================================
+//  Zen Bar Range Projections v1.5
+//
+//  Projects 0.5x and 1x ABR levels above and below the close of the prior
+//  bar - either on the chart timeframe or on a higher timeframe - so you can
+//  see where a measured move from the last completed bar lands relative to
+//  current price.
+//
+//  - Mode "Chart TF":  uses prior bar close + chart-timeframe ABR.
+//  - Mode "Higher TF": uses last-closed HTF bar close + HTF ABR. HTF values
+//    are sourced via [1] inside request.security() so they don't drift while
+//    the live HTF bar is forming.
+//
+//  Bars Back lets you fan out up to 12 historical projection sets so you can
+//  visually audit how price has interacted with prior projections.
+// ============================================================================
+string  mode       = input.string("Chart TF", "Mode", options=["Chart TF", "Higher TF"], group="Settings")
+string  htf        = input.timeframe("60", "Higher Timeframe", group="Settings")
+int     lookback   = input.int(8, "ABR Lookback (bars)", minval=1, maxval=50, group="Settings")
+int     bars_back  = input.int(0, "Bars Back (0 = last bar only)", minval=0, maxval=11, group="Settings",
+                     tooltip="0 = one set of lines from last close. 11 = twelve sets.")
+int     line_width = input.int(2, "Line Width (bars)", minval=1, maxval=20, group="Settings")
+color   col_1x_up  = input.color(color.new(#2196F3, 0),  "1x ABR up colour",   group="Colours")
+color   col_05x_up = input.color(color.new(#2196F3, 50), "0.5x ABR up colour", group="Colours")
+color   col_1x_dn  = input.color(color.new(#FF0000, 0),  "1x ABR down colour",   group="Colours")
+color   col_05x_dn = input.color(color.new(#FF0000, 50), "0.5x ABR down colour", group="Colours")
+int max_sets = 12
+// === CHART TF ABR (runs on every bar) ===
+float abr_series = ta.sma(high - low, lookback)
+// === HTF DATA ===
+// Use [1] inside the security call so we get values from the LAST CLOSED HTF bar,
+// not the currently-forming one. This stops drift while the HTF bar is in progress.
+float htf_close = request.security(syminfo.tickerid, htf, close[1],                        lookahead=barmerge.lookahead_off)
+float htf_abr   = request.security(syminfo.tickerid, htf, ta.sma(high - low, lookback)[1], lookahead=barmerge.lookahead_off)
+// === HTF HISTORY ===
+bool htf_new_bar = ta.change(time(htf)) != 0
+var array<int>   htf_anchor_bars   = array.new_int(0)
+var array<float> htf_close_history = array.new_float(0)
+var array<float> htf_abr_history   = array.new_float(0)
+if htf_new_bar
+    array.unshift(htf_anchor_bars,   bar_index - 1)
+    array.unshift(htf_close_history, htf_close)
+    array.unshift(htf_abr_history,   htf_abr)
+    if array.size(htf_anchor_bars) > max_sets
+        array.pop(htf_anchor_bars)
+        array.pop(htf_close_history)
+        array.pop(htf_abr_history)
+// === DRAW ON LAST BAR ===
+var array<line> lines = array.new_line(max_sets * 4, na)
+if barstate.islast
+    for i = 0 to array.size(lines) - 1
+        line.delete(array.get(lines, i))
+        array.set(lines, i, na)
+    int sets = bars_back + 1
+    for s = 0 to sets - 1
+        float src_close = na
+        float src_abr   = na
+        int   x1        = na
+        if mode == "Higher TF"
+            if s < array.size(htf_close_history)
+                src_close := array.get(htf_close_history, s)
+                src_abr   := array.get(htf_abr_history,   s)
+                x1        := array.get(htf_anchor_bars,   s)
+        else
+            src_close := close[s + 1]
+            src_abr   := abr_series[s + 1]
+            x1        := bar_index - s - 1
+        if not na(src_close) and not na(src_abr) and not na(x1)
+            int x2   = x1 + line_width
+            int base = s * 4
+            array.set(lines, base,     line.new(x1, src_close + 1.0 * src_abr, x2, src_close + 1.0 * src_abr, xloc=xloc.bar_index, color=col_1x_up,  width=1, style=line.style_solid))
+            array.set(lines, base + 1, line.new(x1, src_close + 0.5 * src_abr, x2, src_close + 0.5 * src_abr, xloc=xloc.bar_index, color=col_05x_up, width=1, style=line.style_dashed))
+            array.set(lines, base + 2, line.new(x1, src_close - 0.5 * src_abr, x2, src_close - 0.5 * src_abr, xloc=xloc.bar_index, color=col_05x_dn, width=1, style=line.style_dashed))
+            array.set(lines, base + 3, line.new(x1, src_close - 1.0 * src_abr, x2, src_close - 1.0 * src_abr, xloc=xloc.bar_index, color=col_1x_dn,  width=1, style=line.style_solid))
