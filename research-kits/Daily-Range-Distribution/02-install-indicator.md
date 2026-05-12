@@ -61,12 +61,4 @@ The Zen Trading Tech research convention is 8 bars. If you change this, your out
 
 ---
 
-## Notes
-
-- **Range here is intraday only** — `high − low`, not "true range". True range factors in gaps from yesterday's close. The distribution study uses `high − low` so that gaps don't artificially inflate range values. This matters mainly for instruments that gap frequently.
-- **The first 7 bars** of any chart will have a blank Average Bar Range — the SMA needs 8 bars to produce its first value. These rows get dropped automatically by the analysis in step 3.
-- **The indicator is open-source under MIT**. Use it, modify it, ship it elsewhere. Attribution to [Zen Trading Tech](https://zentradingtech.com) appreciated.
-
----
-
 Once installed, go back to [step 1](./01-download-data.md) if you haven't exported the CSV yet, then on to [step 3](./03-run-the-study.md).
