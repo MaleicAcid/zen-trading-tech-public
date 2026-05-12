@@ -70,20 +70,6 @@ Replace `[INSTRUMENT]` with `ES`, `NK`, `HSI`, or whatever short code matches yo
 
 ## One more rule
 
-Bins with very few days are noise. Still show them in the table (don't filter), but Key Observations should not be built off any bin with fewer than 10 days.
-
 Confirm you understand the brief, show me the summary stats and histogram as text first, and then build the files.
 
 ---PROMPT END---
-
----
-
-## Sanity-check against FDAX
-
-Compare your headline numbers to the reference:
-
-- **FDAX mean is 1.00x, median 0.95x.** A "normal" instrument should land somewhere similar. If your mean is wildly different (say 1.3x), check whether the AI dropped the ABR-null rows correctly.
-- **FDAX has 1.87% of days above 2x ABR.** A heavier-tailed instrument might show 3-4%; a tamer one closer to 1%.
-- **FDAX's mode is 0.7-0.8x.** Most equity indices land in the 0.7-0.9x range. Commodities sometimes show different mode positions.
-
-If numbers look implausible, ask the AI to re-print the summary stats and row count, and to confirm it dropped the warm-up nulls.
