@@ -76,16 +76,4 @@ Save the CSV somewhere you can find it. The filename TradingView gives it (e.g. 
 
 ---
 
-## Common gotchas
-
-**Only a few hundred rows in the export.** TradingView loads only the bars currently visible. Scroll the chart to the very far left before exporting to force it to load older bars. Keyboard shortcut **Alt + S** (Cmd + S on Mac) jumps to the oldest available bar in some layouts.
-
-**No "Range / ABR" column in the export.** The indicator wasn't actually added to the chart, or you exported before applying it. Confirm the Data Window shows the three values, then re-export.
-
-**A whole column of blank "Average Bar Range" values.** The indicator's ABR Length input is set higher than the number of bars available. Either lower the length (default 8 is fine for almost any instrument) or get more history.
-
-**Range values that look 10x too big on one or two specific days.** Almost always a contract-roll gap. Re-check that "Adjust data for contract changes" is enabled in the symbol settings.
-
----
-
 Once you have the CSV, go to [step 3 — run the study](./03-run-the-study.md).
