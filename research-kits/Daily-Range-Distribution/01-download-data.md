@@ -20,11 +20,7 @@ For cash instruments or individual stocks, just use the normal symbol — no con
 
 ## Set the timeframe
 
-Switch the chart to the **daily timeframe (1D)**.
-
-The daily timeframe on TradingView already covers the full 24-hour session — it shows the continuous overnight price action as one bar. You don't need to change any session settings; just be on 1D.
-
-Do not export weekly or 4-hour data — the bin widths and the "ABR" definition assume daily bars.
+Switch it to the **24-hour timeframe (24hr)** instead of daily timeframe.
 
 ---
 
