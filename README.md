@@ -12,7 +12,9 @@
 
 📈 **[Indicators](./indicators)** — Trading indicators and tools you can drop into your own research and execution workflow.
 
-📚 **[Research](./research)** — Published quantitative studies organised by instrument. Probability-first, price-action grounded.
+📚 **[Research Kits](./research-kits)** — Portable study briefs and execution prompts. Probability-first, price-action grounded. Drop them on any instrument.
+
+🚧 **[Research](./research)** — Published quantitative studies organised by instrument. *Under construction.*
 
 ---
 
