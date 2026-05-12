@@ -12,7 +12,9 @@ Open the chart of your instrument in TradingView.
 
 **Use the continuous futures contract**, not the front month. On TradingView these are usually labelled with a `1!` suffix (e.g. `FDAX1!`, `ES1!`, `NK1!`, `HSI1!`). The continuous contract gives you the longest history without contract-roll gaps.
 
-For cash instruments or individual stocks, just use the normal symbol.
+In the symbol settings (gear icon → Symbol tab), make sure **"Adjust data for contract changes"** is enabled. This back-adjusts the price series so contract-roll gaps don't appear as fake daily ranges. Without this, you'll get a handful of rollover days with artificially large Range values.
+
+For cash instruments or individual stocks, just use the normal symbol — no contract-roll setting needed.
 
 ---
 
@@ -20,36 +22,26 @@ For cash instruments or individual stocks, just use the normal symbol.
 
 Switch the chart to the **daily timeframe (1D)**.
 
-This is the only timeframe the study expects. Do not export weekly or 4-hour data — the bin widths and the "ABR" definition assume daily bars.
+The daily timeframe on TradingView already covers the full 24-hour session — it shows the continuous overnight price action as one bar. You don't need to change any session settings; just be on 1D.
 
----
-
-## Use the 24-hour session
-
-If you're on a futures chart, TradingView lets you choose between "Regular Trading Hours" (the cash session of the underlying market) and "Electronic Trading Hours" or the full 24-hour session.
-
-**Use the 24-hour session** (sometimes labelled "ETH" or just "24h"). The study profiles the entire trading day, not just the cash session.
-
-You can usually toggle this in the chart's bottom bar — there's a small clock icon that opens session settings. Pick the option that says 24 hours, or the one without "RTH" or "Regular" in the name.
+Do not export weekly or 4-hour data — the bin widths and the "ABR" definition assume daily bars.
 
 ---
 
 ## Set the time zone
 
-Open the chart settings → Symbol → Time Zone (or click the clock at the very bottom right of the chart).
-
-Set the time zone to **the exchange's local time zone**:
+Click on the **time displayed at the bottom right of the chart** (just under the price axis). A list of time zones opens. Pick the exchange's local time zone:
 
 | Instrument | Time zone |
 |---|---|
-| ES, NQ, RTY, YM (CME) | America/Chicago |
-| FDAX (EUREX) | Europe/Berlin |
-| HSI (HKEx) | Asia/Hong_Kong |
-| Nikkei (CME or OSE) | Asia/Tokyo |
-| FTSE 100 | Europe/London |
-| Gold, Oil (NYMEX/COMEX) | America/New_York |
+| ES, NQ, RTY, YM (CME) | UTC-6 (Chicago / America/Chicago) |
+| FDAX (EUREX) | UTC+1 (Berlin / Europe/Berlin) |
+| HSI (HKEx) | UTC+8 (Hong Kong / Asia/Hong_Kong) |
+| Nikkei (CME or OSE) | UTC+9 (Tokyo / Asia/Tokyo) |
+| FTSE 100 | UTC+0 (London / Europe/London) |
+| Gold, Oil (NYMEX/COMEX) | UTC-5 (New York / America/New_York) |
 
-The time zone choice doesn't change the OHLC numbers (a daily bar is a daily bar), but it makes the date column line up with how traders actually talk about the market. A Monday on a Tokyo chart in Tokyo time is a Monday on the calendar — set to UTC, half the bars look like Sunday.
+The time zone choice doesn't change OHLC values, but it makes the date column line up with how the market actually trades. Set wrong, you can get a Monday on the chart showing up as Sunday in your CSV.
 
 ---
 
@@ -74,7 +66,6 @@ Click the **little down-arrow at the top of the chart** (or right-click on the c
 A dialog opens. Settings to use:
 
 - **Time format:** ISO (so timestamps come out as `2024-01-15` rather than fractional weirdness)
-- **Include hidden indicators:** off (irrelevant — there are no hidden ones for this)
 - **All exporters:** export everything available
 
 Click **Export**.
@@ -91,13 +82,13 @@ Save the CSV somewhere you can find it. The filename TradingView gives it (e.g. 
 
 ## Common gotchas
 
-**Only a few hundred rows in the export.** TradingView shows fewer historical bars on shorter timeframes by default. Scroll the chart to the very far left before exporting to force it to load older bars. Alternatively, on TradingView the keyboard shortcut **Alt + S** (or Cmd + S on Mac) jumps to the oldest available bar.
+**Only a few hundred rows in the export.** TradingView loads only the bars currently visible. Scroll the chart to the very far left before exporting to force it to load older bars. Keyboard shortcut **Alt + S** (Cmd + S on Mac) jumps to the oldest available bar in some layouts.
 
 **No "Range / ABR" column in the export.** The indicator wasn't actually added to the chart, or you exported before applying it. Confirm the Data Window shows the three values, then re-export.
 
 **A whole column of blank "Average Bar Range" values.** The indicator's ABR Length input is set higher than the number of bars available. Either lower the length (default 8 is fine for almost any instrument) or get more history.
 
-**Date column shows times like "03:00:00".** Your time zone is set wrong, or the export captured timestamps from the session open. Daily bars don't have a meaningful time-of-day — only the date portion matters. You can ignore the time, or strip it out in the AI step.
+**Range values that look 10x too big on one or two specific days.** Almost always a contract-roll gap. Re-check that "Adjust data for contract changes" is enabled in the symbol settings.
 
 ---
 

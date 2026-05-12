@@ -16,7 +16,7 @@ An HTML report containing:
 - A size-bucket breakdown (quiet / small / normal / large / big / outlier)
 - A full distribution table with a green heat-map on the percentage column
 
-See `reference-output/FDAX_Daily_Range_Distribution_v1_2_20260512.html` for an example built on 19 years of FDAX history.
+See `reference-output/FDAX_Daily_Range_Distribution_v1_3_20260512.html` for an example built on 19 years of FDAX history.
 
 ---
 
@@ -38,14 +38,6 @@ Work through them in order. The whole thing takes about 10 minutes once you have
 - A TradingView account (free tier works for the data export)
 - An AI chat that can read CSVs and write HTML — Claude is the recommended choice; ChatGPT works too
 - Around 5 minutes of AI processing time once the prompt is pasted
-
----
-
-## Why bother
-
-If you trade an instrument and you don't know how its daily range is distributed, you're guessing about every stop, every target, and every "is today a big day or a quiet day" question. The distribution is the foundation. Everything else — measured moves, intraday targets, position sizing — rests on knowing what "normal" looks like for your instrument.
-
-The same study run on four different instruments tells you whether their distributions are similar (often they're not), where each one's fat tail begins, and which days are genuinely rare.
 
 ---
 
