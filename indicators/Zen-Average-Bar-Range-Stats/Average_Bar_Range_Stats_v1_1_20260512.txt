@@ -1,0 +1,36 @@
+//@version=5
+// =============================================================================
+// Average Bar Range Stats v1.1 · 20260512
+// =============================================================================
+// Purpose: Computes three values for a Daily Range Distribution study and
+// exposes them in the Data Window only. Nothing is rendered on the chart.
+// Values are picked up by TradingView's "Export chart data" feature.
+//
+// Output columns (CSV export):
+//   - Range              today's daily range (high - low), in points
+//   - Average Bar Range  N-bar simple moving average of Range
+//   - Range / ABR        Range divided by Average Bar Range
+//
+// Apply on the DAILY timeframe of any instrument.
+//
+// Notes:
+//   - Range = high - low (intraday range only). Gaps are NOT included.
+//   - The first N-1 bars have a blank Average Bar Range from the SMA warm-up.
+//     Drop these rows before analysis.
+// =============================================================================
+
+indicator("Average Bar Range Stats", overlay = true)
+
+// --- Inputs ---
+abr_length = input.int(8, title = "Average Bar Range Length", minval = 1, maxval = 200,
+     tooltip = "Number of bars in the simple moving average of daily range. Default 8.")
+
+// --- Computations ---
+rng          = high - low
+abr          = ta.sma(rng, abr_length)
+rng_over_abr = abr > 0 ? rng / abr : na
+
+// --- Data-window-only output (invisible on chart, included in CSV export) ---
+plot(rng,          title = "Range",             display = display.data_window)
+plot(abr,          title = "Average Bar Range", display = display.data_window)
+plot(rng_over_abr, title = "Range / ABR",       display = display.data_window)
