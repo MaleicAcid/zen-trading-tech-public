@@ -1,0 +1,360 @@
+//@version=5
+indicator("Zen-DAX GX v11", overlay=true, precision=2)
+
+
+// --- Inputs ---
+grp_time      = "Time Settings"
+timezone      = input.string("Europe/Berlin", "Timezone", options=["Europe/Berlin", "Exchange", "UTC"], group=grp_time)
+globex_sess   = input.session("1730-0900", "Globex / Overnight (Wraps Midnight)", group=grp_time)
+frank_sess    = input.session("0800-0900", "Frankfurt Session (Box)", group=grp_time)
+rth_sess      = input.session("0900-1730", "RTH Session (Trading)", group=grp_time)
+
+grp_globex    = "Globex / Overnight Visuals"
+show_g_box    = input.bool(true, "Show Globex Box", group=grp_globex)
+show_g_lines  = input.bool(true, "Show Globex Extension Lines", group=grp_globex)
+show_g_label  = input.bool(true, "Show Globex Label", group=grp_globex)
+col_globex_box = input.color(color.new(color.orange, 90), "Globex Box Color", group=grp_globex)
+col_globex_lvl = input.color(color.orange, "Globex Line/Border Color", group=grp_globex)
+
+grp_frank      = "Frankfurt Visuals"
+show_f_box     = input.bool(true, "Show Frankfurt Box", group=grp_frank)
+show_f_lines   = input.bool(true, "Show Frankfurt Extension Lines", group=grp_frank)
+show_f_label   = input.bool(true, "Show Frankfurt Label", group=grp_frank)
+show_f_50      = input.bool(true, "Show 50% Frankfurt Line", group=grp_frank)
+show_f_33      = input.bool(true, "Show 33% Frankfurt Line", group=grp_frank)
+show_f_66      = input.bool(true, "Show 66% Frankfurt Line", group=grp_frank)
+col_frank_box  = input.color(color.new(color.blue, 90), "Frankfurt Box Color", group=grp_frank)
+col_frank_lvl  = input.color(color.blue, "Frankfurt Line/Border Color", group=grp_frank)
+col_f_frac     = input.color(color.new(color.purple, 50), "Frankfurt Fractional Line Color", group=grp_frank)
+f_line_style   = input.string("Dotted", "Frankfurt Line Style", options=["Solid", "Dashed", "Dotted"], group=grp_frank)
+
+grp_bar2       = "RTH Bar 2 Visuals"
+show_bar2      = input.bool(false, "Highlight Bar 2 (Bar Color)", group=grp_bar2)
+show_bar2_lines = input.bool(false, "Show Bar 2 Extension Lines", group=grp_bar2)
+show_bar2_labels = input.bool(false, "Show Bar 2 F/GX Labels", group=grp_bar2)
+col_bar2_hi    = input.color(color.new(color.red, 0), "Bar 2 Highlight Color", group=grp_bar2)
+col_bar2_lvl   = input.color(color.red, "Bar 2 Persistent High/Low Color", group=grp_bar2)
+line_width     = input.int(2, "Bar 2 Extension Width", group=grp_bar2)
+ext_len        = input.int(10, "Bar 2 Extension Length", group=grp_bar2)
+
+grp_rr         = "Risk / Reward Targets"
+show_rr        = input.bool(false, "Show 1x and 2x Targets", group=grp_rr)
+show_rr_labels = input.bool(false, "Show 1R/2R Labels", group=grp_rr)
+col_rr         = input.color(color.gray, "Target Line Color", group=grp_rr)
+
+grp_trade_mgt = "Trade Management"
+rr_target_input = input.float(2.0, "Custom RR Target", minval=0.1, step=0.1, group=grp_trade_mgt)
+max_bars_hold   = input.int(20, "Max Trade Duration (Bars)", minval=1, group=grp_trade_mgt)
+gx_fade_input   = input.bool(false, "GX Inside Fade (Reverse Breakout)", group=grp_trade_mgt, tooltip="If Bar 2 closes INSIDE Globex: Breakout High = SHORT, Breakout Low = LONG")
+show_trade_results = input.bool(false, "Show Win/Loss Labels", group=grp_trade_mgt)
+
+grp_stats = "Stats Display"
+show_stats_table = input.bool(false, "Show Stats Table", group=grp_stats)
+
+grp_regime = "Globex Regime Analysis"
+show_regime_label = input.bool(true, "Show Regime Label", group=grp_regime)
+regime_label_size = input.string("Normal", "Label Size", options=["Tiny", "Small", "Normal", "Large"], group=grp_regime)
+regime_label_position = input.string("Above", "Label Position", options=["Above", "Below"], group=grp_regime)
+regime_label_offset = input.float(1.0, "Label Offset %", minval=0.1, maxval=10.0, step=0.1, group=grp_regime, tooltip="Percentage of price to offset label from high/low")
+
+grp_gx_lines = "Globex Fractional Lines"
+show_gx_50 = input.bool(true, "Show 50% GX Line", group=grp_gx_lines)
+show_gx_33 = input.bool(true, "Show 33% GX Line", group=grp_gx_lines)
+show_gx_66 = input.bool(true, "Show 66% GX Line", group=grp_gx_lines)
+col_gx_frac = input.color(color.new(color.purple, 50), "Fractional Line Color", group=grp_gx_lines)
+gx_line_style = input.string("Dotted", "Line Style", options=["Solid", "Dashed", "Dotted"], group=grp_gx_lines)
+
+// --- Session Range Logic (Globex) ---
+in_globex     = not na(time(timeframe.period, globex_sess, timezone == "Exchange" ? syminfo.timezone : timezone))
+is_new_globex = in_globex and not in_globex[1]
+var float g_high = na, var float g_low = na, var box g_box = na
+
+if is_new_globex
+    g_high := high
+    g_low  := low
+    if show_g_box
+        g_box := box.new(left=bar_index, top=g_high, right=bar_index, bottom=g_low, bgcolor=col_globex_box, border_color=col_globex_lvl, border_width=1)
+        if show_g_label
+            label.new(bar_index, g_high, "Globex", color=color.new(color.white, 100), textcolor=col_globex_lvl, style=label.style_label_down, size=size.small)
+else if in_globex
+    g_high := math.max(g_high, high)
+    g_low  := math.min(g_low, low)
+    if show_g_box
+        box.set_top(g_box, g_high)
+        box.set_bottom(g_box, g_low)
+        box.set_right(g_box, bar_index)
+
+// --- Session Range Logic (Frankfurt) ---
+in_frankfurt     = not na(time(timeframe.period, frank_sess, timezone == "Exchange" ? syminfo.timezone : timezone))
+is_new_frankfurt = in_frankfurt and not in_frankfurt[1]
+var float f_high = na, var float f_low = na, var box f_box = na
+
+if is_new_frankfurt
+    f_high := high
+    f_low  := low
+    if show_f_box
+        f_box := box.new(left=bar_index, top=f_high, right=bar_index, bottom=f_low, bgcolor=col_frank_box, border_color=col_frank_lvl, border_width=1)
+        if show_f_label
+            label.new(bar_index, f_high, "Frankfurt", color=color.new(color.white, 100), textcolor=col_frank_lvl, style=label.style_label_down, size=size.small)
+else if in_frankfurt
+    f_high := math.max(f_high, high)
+    f_low  := math.min(f_low, low)
+    if show_f_box
+        box.set_top(f_box, f_high)
+        box.set_bottom(f_box, f_low)
+        box.set_right(f_box, bar_index)
+
+// --- RTH Counter and Bar 2 Persistence ---
+in_rth       = not na(time(timeframe.period, rth_sess, timezone == "Exchange" ? syminfo.timezone : timezone))
+is_rth_start = in_rth and not in_rth[1]
+var int rth_counter = 0
+var float b2_high = na, var float b2_low = na
+
+if is_rth_start
+    rth_counter := 1
+    b2_high := na
+    b2_low  := na
+else if in_rth
+    rth_counter += 1
+else
+    rth_counter := 0
+
+is_bar1 = (rth_counter == 1) and in_rth
+is_bar2 = (rth_counter == 2) and in_rth
+
+// --- Bull / Bear Logic ---
+bar1_type = is_bar1 ? (close > open ? 1 : close < open ? -1 : 0) : na
+bar2_type = is_bar2 ? (close > open ? 1 : close < open ? -1 : 0) : na
+
+// --- 6-Point Logic and Chart Labels ---
+var int logic_c_f  = na, var int logic_h_f  = na, var int logic_l_f  = na
+var int logic_c_gx = na, var int logic_h_gx = na, var int logic_l_gx = na
+
+if is_bar2
+    b2_high := high
+    b2_low  := low
+    
+    logic_c_f  := close > f_high ? 1 : close < f_low ? -1 : 0
+    logic_h_f  := high  > f_high ? 1 : high  < f_low ? -1 : 0
+    logic_l_f  := low   > f_high ? 1 : low   < f_low ? -1 : 0
+    
+    logic_c_gx := close > g_high ? 1 : close < g_low ? -1 : 0
+    logic_h_gx := high  > g_high ? 1 : high  < g_low ? -1 : 0
+    logic_l_gx := low   > g_high ? 1 : low   < g_low ? -1 : 0
+
+    if show_bar2_lines
+        line.new(bar_index, high, bar_index + ext_len, high, color=col_bar2_lvl, width=line_width)
+        line.new(bar_index, low, bar_index + ext_len, low, color=col_bar2_lvl, width=line_width)
+
+    if show_rr
+        float rng = high - low
+        line.new(bar_index, high + rng, bar_index + ext_len, high + rng, color=col_rr, style=line.style_dashed)
+        line.new(bar_index, high + (rng*2), bar_index + ext_len, high + (rng*2), color=col_rr, style=line.style_dashed)
+        line.new(bar_index, low - rng, bar_index + ext_len, low - rng, color=col_rr, style=line.style_dashed)
+        line.new(bar_index, low - (rng*2), bar_index + ext_len, low - (rng*2), color=col_rr, style=line.style_dashed)
+        
+        if show_rr_labels
+            label.new(bar_index + ext_len, high + rng, "1R", style=label.style_none, textcolor=col_rr, size=size.tiny)
+            label.new(bar_index + ext_len, high + (rng*2), "2R", style=label.style_none, textcolor=col_rr, size=size.tiny)
+            label.new(bar_index + ext_len, low - rng, "1R", style=label.style_none, textcolor=col_rr, size=size.tiny)
+            label.new(bar_index + ext_len, low - (rng*2), "2R", style=label.style_none, textcolor=col_rr, size=size.tiny)
+
+    if show_bar2_labels
+        if logic_c_f != 0
+            label.new(bar_index, high, logic_c_f == 1 ? "F: ABOVE" : "F: BELOW", yloc=yloc.abovebar, style=label.style_none, textcolor=logic_c_f == 1 ? color.green : color.red, size=size.small)
+        if logic_c_gx != 0
+            label.new(bar_index, low, logic_c_gx == 1 ? "GX: ABOVE" : "GX: BELOW", yloc=yloc.belowbar, style=label.style_none, textcolor=logic_c_gx == 1 ? color.green : color.red, size=size.small)
+
+if is_rth_start
+    logic_c_f := na, logic_h_f := na, logic_l_f := na
+    logic_c_gx := na, logic_h_gx := na, logic_l_gx := na
+
+// --- GLOBAL PLOTTING ---
+barcolor(is_bar2 and show_bar2 ? col_bar2_hi : na)
+
+// --- DATA WINDOW OUTPUTS ---
+plot(is_bar1 ? 1 : 0, "Is Bar 1", color=color.new(color.white, 100), display=display.data_window)
+plot(is_bar2 ? 1 : 0, "Is Bar 2", color=color.new(color.white, 100), display=display.data_window)
+plot(bar1_type, "Bar 1 Bull/Bear", color=color.new(color.white, 100), display=display.data_window)
+plot(bar2_type, "Bar 2 Bull/Bear", color=color.new(color.white, 100), display=display.data_window)
+plot(logic_c_f,  "Bar 2 Close vs Frankfurt", display=display.data_window)
+plot(logic_h_f,  "Bar 2 High vs Frankfurt",  display=display.data_window)
+plot(logic_l_f,  "Bar 2 Low vs Frankfurt",   display=display.data_window)
+plot(logic_c_gx, "Bar 2 Close vs Globex",    display=display.data_window)
+plot(logic_h_gx, "Bar 2 High vs Globex",     display=display.data_window)
+plot(logic_l_gx, "Bar 2 Low vs Globex",      display=display.data_window)
+plot(rth_counter > 2 and show_bar2_lines ? b2_high : na, "Bar 2 High", color=col_bar2_lvl, linewidth=2, style=plot.style_linebr)
+plot(rth_counter > 2 and show_bar2_lines ? b2_low : na, "Bar 2 Low", color=col_bar2_lvl, linewidth=2, style=plot.style_linebr)
+plot(in_rth and show_g_lines ? g_high : na, "Globex High", color=col_globex_lvl, style=plot.style_linebr)
+plot(in_rth and show_g_lines ? g_low : na, "Globex Low", color=col_globex_lvl, style=plot.style_linebr)
+plot(in_rth and show_f_lines ? f_high : na, "Frankfurt High", color=col_frank_lvl, style=plot.style_linebr)
+plot(in_rth and show_f_lines ? f_low : na, "Frankfurt Low", color=col_frank_lvl, style=plot.style_linebr)
+
+// --- TRADE MANAGEMENT LOGIC ---
+var int   t_dir       = 0 
+var float t_stop      = na
+var float t_target    = na
+var bool  t_active    = false
+var bool  t_finished  = false 
+var int   t_entry_bar = 0
+
+if is_rth_start
+    t_dir := 0, t_stop := na, t_target := na, t_active := false, t_finished := false, t_entry_bar := 0
+
+if rth_counter > 2 and not t_active and not t_finished and not na(b2_high)
+    float brng = b2_high - b2_low
+    bool is_inside_gx = (logic_c_gx == 0) 
+    bool do_fade = gx_fade_input and is_inside_gx
+
+    if high > b2_high
+        t_dir       := do_fade ? -1 : 1
+        t_active    := true
+        t_entry_bar := bar_index
+        t_stop      := do_fade ? high : b2_low
+        t_target    := do_fade ? b2_high - (brng * rr_target_input) : b2_high + (brng * rr_target_input)
+    else if low < b2_low
+        t_dir       := do_fade ? 1 : -1
+        t_active    := true
+        t_entry_bar := bar_index
+        t_stop      := do_fade ? low : b2_high
+        t_target    := do_fade ? b2_low + (brng * rr_target_input) : b2_low - (brng * rr_target_input)
+
+bool was_win  = false
+bool was_loss = false
+
+if t_active and not t_finished
+    int bars_since_entry = bar_index - t_entry_bar
+    if (t_dir == 1 and low <= t_stop) or (t_dir == -1 and high >= t_stop)
+        t_finished := true
+        t_active   := false
+        was_loss   := true
+    else if (t_dir == 1 and high >= t_target) or (t_dir == -1 and low <= t_target)
+        t_finished := true
+        t_active   := false
+        was_win    := true
+    else if bars_since_entry >= max_bars_hold or not in_rth
+        t_finished := true
+        t_active   := false
+
+if show_trade_results
+    if was_win
+        label.new(bar_index, high, "WIN", style=label.style_label_down, color=color.blue, textcolor=color.white, size=size.tiny)
+    if was_loss
+        label.new(bar_index, high, "STOP HIT", style=label.style_label_down, color=color.red, textcolor=color.white, size=size.tiny)
+
+plot(t_active ? t_dir : 0, "Trade Active Dir", display=display.data_window, color=color.blue)
+plot(was_win ? 1 : 0,      "Result: Win",      display=display.data_window, color=color.blue)
+plot(was_loss ? 1 : 0,     "Result: Stop Hit", display=display.data_window, color=color.red)
+
+var int winCount  = 0
+var int lossCount = 0
+if was_win
+    winCount += 1
+if was_loss
+    lossCount += 1
+
+int totalTrades = winCount + lossCount
+float winRate   = totalTrades > 0 ? (winCount / totalTrades) * 100 : 0
+
+if show_stats_table
+    var table statsTable = table.new(position.top_right, 2, 4, bgcolor=color.new(color.black, 70), border_width=1, border_color=color.gray)
+    if barstate.islast
+        table.cell(statsTable, 0, 0, "Bar 2 Stats", text_color=color.white, text_size=size.small)
+        table.cell(statsTable, 1, 0, "Value",       text_color=color.white, text_size=size.small)
+        table.cell(statsTable, 0, 1, "Wins",        text_color=color.white, text_halign=text.align_left)
+        table.cell(statsTable, 1, 1, str.tostring(winCount), text_color=color.blue, text_halign=text.align_right)
+        table.cell(statsTable, 0, 2, "Losses",      text_color=color.white, text_halign=text.align_left)
+        table.cell(statsTable, 1, 2, str.tostring(lossCount), text_color=color.red, text_halign=text.align_right)
+        table.cell(statsTable, 0, 3, "Win Rate",    text_color=color.white, text_halign=text.align_left)
+        table.cell(statsTable, 1, 3, str.format("{0,number,#.##}%", winRate), text_color=color.yellow, text_halign=text.align_right)
+
+// --- GLOBEX STATS ---
+float globex_range = g_high - g_low
+var float rth_open_price = na
+if is_rth_start
+    rth_open_price := open
+float gx_pct_d = (globex_range / rth_open_price) * 100
+
+// --- GLOBEX REGIME ANALYSIS ---
+string regime = na
+string regime_stats = na
+color regime_color = na
+
+if is_bar1 and not na(gx_pct_d)
+    if gx_pct_d < 0.5
+        regime := "TIGHT"
+        regime_stats := "Occurs: 32% | Break Both: 34% | Stay Within: <1%"
+        regime_color := color.red
+    else if gx_pct_d >= 0.5 and gx_pct_d < 1.0
+        regime := "MEDIUM"
+        regime_stats := "Occurs: 50% | Break Both: 22% | Stay Within: 4%"
+        regime_color := color.green
+    else
+        regime := "WIDE"
+        regime_stats := "Occurs: 18% | Break Both: 7% | Stay Within: 18%"
+        regime_color := color.orange
+    
+    if show_regime_label and not na(regime)
+        string label_text = regime + "\n" + regime_stats + "\nGX Range: " + str.tostring(gx_pct_d, "#.##") + "%"
+        string label_size_str = regime_label_size == "Tiny" ? size.tiny : regime_label_size == "Small" ? size.small : regime_label_size == "Normal" ? size.normal : size.large
+        float price_offset = high * (regime_label_offset / 100)
+        float label_y = regime_label_position == "Above" ? high + price_offset : low - price_offset
+        string label_style = regime_label_position == "Above" ? label.style_label_down : label.style_label_up
+        label.new(bar_index, label_y, label_text, color=color.new(color.black, 20), textcolor=regime_color, style=label_style, size=label_size_str)
+
+// --- GLOBEX FRACTIONAL LINES ---
+if is_bar1 and not na(g_high) and not na(g_low)
+    float gx_mid = (g_high + g_low) / 2
+    float gx_range = g_high - g_low
+    string line_style_str = gx_line_style == "Solid" ? line.style_solid : gx_line_style == "Dashed" ? line.style_dashed : line.style_dotted
+    
+    if show_gx_50
+        line.new(bar_index, gx_mid, bar_index + ext_len, gx_mid, color=col_gx_frac, width=1, style=line_style_str)
+        label.new(bar_index + ext_len, gx_mid, "50%", style=label.style_none, textcolor=col_gx_frac, size=size.tiny)
+    if show_gx_33
+        float gx_33 = g_low + (gx_range * 0.33)
+        line.new(bar_index, gx_33, bar_index + ext_len, gx_33, color=col_gx_frac, width=1, style=line_style_str)
+        label.new(bar_index + ext_len, gx_33, "33%", style=label.style_none, textcolor=col_gx_frac, size=size.tiny)
+    if show_gx_66
+        float gx_66 = g_low + (gx_range * 0.66)
+        line.new(bar_index, gx_66, bar_index + ext_len, gx_66, color=col_gx_frac, width=1, style=line_style_str)
+        label.new(bar_index + ext_len, gx_66, "66%", style=label.style_none, textcolor=col_gx_frac, size=size.tiny)
+
+// --- FRANKFURT FRACTIONAL LINES ---
+if is_bar1 and not na(f_high) and not na(f_low)
+    float f_mid = (f_high + f_low) / 2
+    float f_range = f_high - f_low
+    string f_line_style_str = f_line_style == "Solid" ? line.style_solid : f_line_style == "Dashed" ? line.style_dashed : line.style_dotted
+    int f_ext_len = ext_len + 3
+    
+    if show_f_50
+        line.new(bar_index, f_mid, bar_index + f_ext_len, f_mid, color=col_f_frac, width=1, style=f_line_style_str)
+        label.new(bar_index + f_ext_len, f_mid, "F:50%", style=label.style_none, textcolor=color.new(col_f_frac, 30), size=size.tiny)
+    if show_f_33
+        float f_33 = f_low + (f_range * 0.33)
+        line.new(bar_index, f_33, bar_index + f_ext_len, f_33, color=col_f_frac, width=1, style=f_line_style_str)
+        label.new(bar_index + f_ext_len, f_33, "F:33%", style=label.style_none, textcolor=color.new(col_f_frac, 30), size=size.tiny)
+    if show_f_66
+        float f_66 = f_low + (f_range * 0.66)
+        line.new(bar_index, f_66, bar_index + f_ext_len, f_66, color=col_f_frac, width=1, style=f_line_style_str)
+        label.new(bar_index + f_ext_len, f_66, "F:66%", style=label.style_none, textcolor=color.new(col_f_frac, 30), size=size.tiny)
+
+// --- 8-DAY XETRA AVERAGE RANGE ---
+float daily_xetra_range = request.security(syminfo.tickerid, "D", high - low, barmerge.gaps_off, barmerge.lookahead_off)
+float sum_8d_ranges = request.security(syminfo.tickerid, "D", math.sum(high - low, 8), barmerge.gaps_off, barmerge.lookahead_off)
+float avg_8d_xetra = sum_8d_ranges / 8
+
+var float gx_vs_8d = na
+var float frank_vs_8d = na
+
+if is_bar1 and not na(avg_8d_xetra) and not na(globex_range)
+    gx_vs_8d := globex_range / avg_8d_xetra
+    frank_vs_8d := (f_high - f_low) / avg_8d_xetra
+
+plot(in_rth ? daily_xetra_range : na, "Daily Xetra Range", display=display.data_window, color=color.red)
+plot(in_rth ? sum_8d_ranges : na, "8D Sum", display=display.data_window, color=color.gray)
+plot(in_rth ? avg_8d_xetra : na, "8D Xetra Avg Range", display=display.data_window, color=color.teal)
+plot(in_rth ? gx_vs_8d : na, "GX vs 8D Xetra", display=display.data_window, color=color.orange)
+plot(in_rth ? frank_vs_8d : na, "Frankfurt vs 8D Xetra", display=display.data_window, color=color.blue)
+plot(in_rth ? globex_range : na, "Globex Range", display=display.data_window, color=color.orange, format=format.price)
+plot(in_rth ? gx_pct_d : na, "GX%D", display=display.data_window, color=color.yellow, format=format.percent)
