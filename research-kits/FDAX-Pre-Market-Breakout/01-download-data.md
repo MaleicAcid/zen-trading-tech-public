@@ -71,7 +71,7 @@ Open it briefly to check:
 
 ## A note on data history limits
 
-TradingView's history limit on 15-minute bars depends on your plan. Free accounts typically get around 1–2 years. A paid plan gives significantly more. The FDAX dataset included in `data/` was built by stitching multiple exports together — if your export is shorter, the study still works but covers a narrower date range.
+TradingView limits how many bars can be loaded on screen at one time. To access more history than a single export covers, scroll left until you reach the earliest available bar, export that chunk, then use the Replay feature to move the chart back so only a couple of days are visible — this causes TradingView to load another batch of history further back. Export again. Repeat until you have the full range you need, then stitch the exports together. The FDAX dataset included in `data/` was built this way — if your export is shorter, the study still works but covers a narrower date range.
 
 ---
 

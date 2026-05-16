@@ -132,8 +132,6 @@ The prompt above is written for FDAX with Berlin-time session boundaries. To ada
 3. Change the normalisation baseline — for ES the ABR column is based on the NYSE session range, not Xetra
 4. Adjust the Frankfurt bucket breakpoints if the pre-open window is a different fraction of the day's range for your instrument
 
-The same methodology was applied to ES (1,151 days) and produced the same structural pattern.
-
 ---
 
 [Back to README](./README.md)
