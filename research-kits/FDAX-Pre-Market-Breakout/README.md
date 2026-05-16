@@ -2,7 +2,7 @@
 
 A self-contained kit covering the statistical behaviour of the FDAX overnight (Globex) and Frankfurt pre-open ranges relative to Xetra price action — how often Xetra breaks each range, which direction, and how breakout shape changes as the overnight range grows.
 
-The study was run on 1,878 trading days (Dec 2018 – May 2026) using a stitched 15-minute FDAX history built from the Zen-DAX GX indicator.The same methodology can be applied to any futures instrument with a defined pre-market session.
+The study was run on 1,878 trading days (Dec 2018 – May 2026) using a stitched 15-minute FDAX history built from the Zen-DAX GX indicator. The same methodology can be applied to any futures instrument with a defined pre-market session.
 
 ---
 
@@ -10,7 +10,7 @@ The study was run on 1,878 trading days (Dec 2018 – May 2026) using a stitched
 
 - **Xetra breaks the Globex range 94.1% of days** — one or both sides
 - **Xetra breaks the Frankfurt range 99.9% of days** — exactly one "Neither" day in 7.4 years, during peak COVID volatility
-- **Frankfurt "Both" sides broken: 62.4%** — rises to 87% when the pre-open hour is quiet (under 10% of ABR)
+- **Frankfurt "Both" sides broken: 62.4%** — rises to 87% when the Frankfurt range is under 10% of ABR
 - **Overnight range size predicts breakout shape, not daily size** — as the Globex range grows from <30% to 120%+ of ABR, "Both" collapses from 42% to 3% and "Neither" rises from 0% to 31%
 - **Correlation between Globex range and daily range: r = 0.28** — weak; a big overnight range tells you how Xetra will behave relative to it, not how large the Xetra session will be
 
@@ -20,7 +20,7 @@ The study was run on 1,878 trading days (Dec 2018 – May 2026) using a stitched
 
 | Item | Location |
 |------|----------|
-| Full HTML report | `reference-output/FDAX_Pre_Market_Breakout_v2_0_20260516.html` |
+| Full HTML report | `reference-output/index.html` |
 | Markdown stats summary | `reference-output/FDAX_Pre_Market_Breakout_Stats_v2_0_20260516.md` |
 | 15-minute FDAX data (stitched) | `data/` |
 | Zen-DAX GX indicator (Pine v5) | `indicator/Zen_DAX_GX_v11.txt` |

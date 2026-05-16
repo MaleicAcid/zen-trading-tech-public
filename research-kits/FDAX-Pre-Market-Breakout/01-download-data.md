@@ -2,13 +2,11 @@
 
 This step gets you a CSV file of 15-minute FDAX bars. The indicator reads the overnight and Frankfurt session ranges from intraday bars, so daily-bar data will not work here.
 
-If you just want to read the research findings, skip this step — the reference output is already in `reference-output/`. Come here only if you want to replicate or extend the study on a different instrument or date range.
-
 ---
 
 ## The data file for FDAX
 
-A pre-built stitched 15-minute FDAX dataset (Dec 2018 – May 2026, 153,123 bars) is included in the `data/` folder. You can use this directly with the execution prompt in step 3 without downloading anything.
+A pre-built stitched 15-minute FDAX dataset (Dec 2018 – May 2026, 153,123 bars) is included in the `data/` folder. You can use this directly with the execution prompt in step 3 without downloading anything. Skip the steps below if you are using the included data file.
 
 ---
 
@@ -67,7 +65,7 @@ Open it briefly to check:
 
 - You should see columns including `time`, `open`, `high`, `low`, `close`, and the indicator outputs (`Globex Range`, `GX vs 8D Xetra`, `Frankfurt vs 8D Xetra`, etc.)
 - The first 8 rows will have blank ABR values — the 8-bar average needs 8 bars to initialise. This is expected
-- You should have bars from 17:30 through 17:30 the following day, spanning multiple years
+- You should have bars spanning the full 24 hours of each trading day
 
 ---
 

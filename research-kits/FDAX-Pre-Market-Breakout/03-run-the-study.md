@@ -14,7 +14,7 @@ The markdown summary `reference-output/FDAX_Pre_Market_Breakout_Stats_v2_0_20260
 
 ## Option B — Run it yourself with the execution prompt
 
-Paste the prompt below into Claude (claude.ai recommended — the prompt is optimised for Claude Sonnet) along with your CSV file. The prompt is self-contained and pre-written for FDAX. If you are adapting it to another instrument, read the adaptation notes at the bottom of this page first.
+Paste the prompt below into Claude (claude.ai) along with your CSV file. The prompt is self-contained and pre-written for FDAX. If you are adapting it to another instrument, read the adaptation notes at the bottom of this page first.
 
 ---
 
@@ -53,8 +53,8 @@ For each trading day (each row where `Is Bar 1 == 1`):
 - Identify the Frankfurt Range and Frankfurt vs 8D Xetra values at the Bar 1 timestamp
 - Identify the ABR (8D Xetra Avg Range) at Bar 1
 - Compute the RTH high and RTH low across all 15-minute bars from 09:00 to 17:30 (inclusive of both boundary bars)
-- At Bar 1, extract the Globex high and Globex low. The Globex high is the high of the overnight range; the Globex low is the low of the overnight range. To get them: the Globex high = Bar 1 open + (Globex Range × some factor). Actually, reconstruct them directly: scan backward from Bar 1 to find the prior session's Bar 1 (the previous day's 09:00), then take the max high and min low of all bars from that prior Bar 1 onward through 09:00 today. That gives you the true Globex high and low.
-- Similarly, the Frankfurt high = max high of all bars from 08:00 to the bar immediately before 09:00 (exclusive). The Frankfurt low = min low of those same bars.
+- Reconstruct the Globex high and Globex low directly: scan backward from Bar 1 to find the prior session's Bar 1 (the previous day's 09:00), then take the max high and min low of all bars from that prior Bar 1 onward through 09:00 today. That gives you the Globex high and low.
+- The Frankfurt high = max high of all bars from 08:00 to the bar immediately before 09:00 (exclusive). The Frankfurt low = min low of those same bars.
 
 ### Step 2 — Classify each day
 
@@ -107,7 +107,7 @@ State upfront whether you are using pre-computed columns or recomputing from scr
 
 ### What to expect
 
-The prompt takes 2–5 minutes to run on a full 7-year dataset depending on your plan. It will first confirm the day count and date range, then work through the classification and bucketing, then produce the HTML.
+The prompt takes 2–5 minutes to run on a full 7-year dataset depending on the length of the CSV and your account's context limit. It will first confirm the day count and date range, then work through the classification and bucketing, then produce the HTML.
 
 If the output is cut short due to context length, paste the prompt again and add: "The previous run was cut short at [point]. Continue from that point using the same data."
 
@@ -132,7 +132,7 @@ The prompt above is written for FDAX with Berlin-time session boundaries. To ada
 3. Change the normalisation baseline — for ES the ABR column is based on the NYSE session range, not Xetra
 4. Adjust the Frankfurt bucket breakpoints if the pre-open window is a different fraction of the day's range for your instrument
 
-The structural pattern (Both collapse / Neither emergence as overnight range grows) has been confirmed on both FDAX and ES, so the same analysis logic applies across instruments.
+The same methodology was applied to ES (1,151 days) and produced the same structural pattern.
 
 ---
 

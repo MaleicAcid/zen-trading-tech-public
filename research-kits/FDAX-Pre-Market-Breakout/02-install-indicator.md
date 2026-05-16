@@ -9,7 +9,7 @@ This step adds the Zen-DAX GX v11 indicator to your TradingView chart. It draws 
 1. Open `indicator/Zen_DAX_GX_v11.txt` from this kit and copy the entire contents.
 2. In TradingView, open the **Pine Editor** — it's the tab at the bottom of the screen. If you don't see it, look for the toggle in the bottom toolbar.
 3. Clear the default template (select all, delete) and paste the copied code.
-4. Click **Save** at the top of the Pine Editor. Give it a name — "Zen-DAX GX v11" works.
+4. Click **Save** at the top of the Pine Editor. Name it — for example, "Zen-DAX GX v11".
 5. Click **Add to chart**.
 
 ---
@@ -40,7 +40,7 @@ Zen-DAX GX v11
   Bar 1 Bull/Bear           -1, 0, or 1
   Bar 2 Bull/Bear           -1, 0, or 1
   Globex Range              e.g. 142.5
-  GX%D                      e.g. 0.75%
+  GX%D                      e.g. 0.75  (Globex range as % of that day's Xetra range)
   GX vs 8D Xetra            e.g. 0.58
   Frankfurt vs 8D Xetra     e.g. 0.21
   8D Xetra Avg Range        e.g. 248.0
